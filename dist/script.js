@@ -1,30 +1,28 @@
 console.clear();
 
 //===================================================== canvas
-var renderer = new THREE.WebGLRenderer({ alpha: true, antialiase: true });
+const renderer = new THREE.WebGLRenderer({alpha: true, antialiase: true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 //===================================================== scene
-var scene = new THREE.Scene();
+const scene = new THREE.Scene();
 
 //===================================================== camera
-var camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
 );
 camera.position.z = 5;
 camera.position.y = 1.5;
 
 //===================================================== lights
-var light = new THREE.DirectionalLight(0xefefff, 3);
+let light = new THREE.DirectionalLight(0xefefff, 3);
 light.position.set(1, 1, 1).normalize();
 scene.add(light);
-var light = new THREE.DirectionalLight(0xffefef, 3);
-light.position.set(-1, -1, -1).normalize();
-scene.add(light);
+
 
 //===================================================== resize
 window.addEventListener("resize", function () {
@@ -36,9 +34,10 @@ window.addEventListener("resize", function () {
 });
 
 //===================================================== model
-var loader = new THREE.GLTFLoader();
-var mixer;
-var model;
+let loader = new THREE.GLTFLoader();
+let mixer;
+let model;
+let model2;
 loader.load(
   "../src/untitled.glb",
   function (gltf) {
@@ -51,23 +50,51 @@ loader.load(
 
     model = gltf.scene;
     model.scale.set(0.35, 0.35, 0.35);
+    model.position.set(-1.5,0)
     scene.add(model);
 
     mixer = new THREE.AnimationMixer(model);
     // mixer.clipAction(gltf.animations[1]).play();
-    var action = mixer.clipAction(gltf.animations[1]);
+    let action = mixer.clipAction(gltf.animations[1]);
     action.play();
 
     createAnimation(mixer, action, gltf.animations[1]);
   }
 );
 
-var clock = new THREE.Clock();
+loader.load("../src/Fox.glb",
+    function (fox2){
+      fox2.scene.traverse(function (node) {
+        if (node instanceof THREE.Mesh) {
+          node.castShadow = true;
+          node.material.side = THREE.DoubleSide;
+        }
+      });
+
+      model2 = fox2.scene;
+      model2.scale.set(0.025,0.025,0.025);
+      model2.position.set(1.5,0)
+      model2.rotation.y = 1
+      scene.add(model2);
+
+      mixer = new THREE.AnimationMixer(model2);
+      // mixer.clipAction(gltf.animations[1]).play();
+      let action = mixer.clipAction(fox2.animations[1]);
+      action.play();
+
+      createAnimation(mixer, action, fox2.animations[1]);
+    }
+    );
+
+
+let clock = new THREE.Clock();
+
 function render() {
   requestAnimationFrame(render);
-  var delta = clock.getDelta();
+  const delta = clock.getDelta();
   if (mixer != null) mixer.update(delta);
   if (model) model.rotation.y += 0.0025;
+
 
   renderer.render(scene, camera);
 }
